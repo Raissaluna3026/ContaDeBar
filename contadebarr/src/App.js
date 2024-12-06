@@ -28,6 +28,7 @@ function Button({children, onClick}){
 }
 
 export default function App(){
+  const [amigoSelecionado, setAmigoSelecionado] = useState(null)
   const [amigos,setAmigos] = useState(initialFriends);
   const [mostrarAdcAmigos, setMostrarAdcAmigos] = useState(false);
 
@@ -39,33 +40,43 @@ export default function App(){
     setAmigos((amigos) => [...amigos, amigo]);
   }
 
+  function handleSelecao(amigo){
+    setAmigoSelecionado((cur) => cur?.id === amigo.id ? null : amigo)
+  }
+
   return(
     <div className="app">
       <div className="sidebar">
-      <ListaAmigos amigos={amigos} />
+      <ListaAmigos amigos={amigos} onSelecao={handleSelecao} amigoSelecionado={amigoSelecionado}/>
+
       {mostrarAdcAmigos && <FormularioAdicionarMigo onAdcAmigo={handleAdcAmigo}/>}
       <Button onClick={handleMostrarAdcAmigos}>{mostrarAdcAmigos ? 'Close' : 'Add amigo'}</Button>
+
       </div>
-      <FormularioDividirConta/>
+      {/*//formulario de dividir conta so aparece qnd o amigo for selecionado*/}
+      {amigoSelecionado && <FormularioDividirConta amigoSelecionado={amigoSelecionado}/>} 
+      
     </div>
   )
 }
 
-function ListaAmigos({amigos}){
+function ListaAmigos({amigos, onSelecao, amigoSelecionado}){
   
 
   return(
     <ul>
       {amigos.map((amigo) => (
-        <Amigo amigo={amigo} key={amigo.id}/>
+        <Amigo amigo={amigo} key={amigo.id} onSelecao={onSelecao} amigoSelecionado={amigoSelecionado}/>
       ))}
     </ul>
   )
 }
 
-function Amigo({amigo}){
+function Amigo({amigo, onSelecao, amigoSelecionado}){
+  const estaSelecionado = amigoSelecionado?.id === amigo.id;
+  
   return (
-  <li>
+  <li className={estaSelecionado ? "selected" : ""}>
     <img src={amigo.image} alt={amigo.name}/>
     <h3>{amigo.name}</h3>
     {amigo.balance < 0 && (
@@ -80,7 +91,7 @@ function Amigo({amigo}){
     )}
     {amigo.balance === 0 && <p>Você e {amigo.name} estão quites!</p>}
 
-    <Button>Selecionar</Button>
+    <Button onClick={() => onSelecao(amigo)}>Selecionar</Button>
 
   </li>)
 }
@@ -123,22 +134,24 @@ function FormularioAdicionarMigo({onAdcAmigo}){
   )
 }
 
-function FormularioDividirConta(){
+
+
+function FormularioDividirConta({amigoSelecionado}){
   return(
     <form className="form-split-bill">
-      <h2>Dividir a conta com X</h2>
+      <h2>Dividir a conta com {amigoSelecionado.name}</h2>
 
       <label>💰 Valor da conta</label>
       <input type="text"/>
       <label>💰 Sua despesa</label>
       <input type="text"/>
-      <label>💰 Despesa de X </label>
+      <label>💰 Despesa de {amigoSelecionado.name} </label>
       <input type="text"/>
 
       <label>❓Quem esta pagando a conta?</label>
       <select>
         <option value='user'>Você</option>
-        <option value='friend'>X</option>
+        <option value='friend'>{amigoSelecionado.name}</option>
       </select>
 
       <Button>Dividir conta</Button>
